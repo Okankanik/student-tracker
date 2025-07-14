@@ -31,7 +31,7 @@
                   :icon="Delete"
                   size="small"
                   type="danger"
-                  @click="handleDelete(scope.row)"
+                  @click="handleDelete(scope.row.id)"
                 ></el-button>
               </div>
             </template>
@@ -45,21 +45,27 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { onMounted, ref } from "vue";
 import { Edit, Delete, Plus } from "@element-plus/icons-vue";
 import StudentService from "../core/services/StudentService";
+import type { Student } from '../core/models/Student';
 
 export default {
   setup() {
-    const students = ref([]);
+    const students = ref<Student[]>([]);
 
     onMounted(() => {
       students.value = StudentService.getStudents();
-    })
+    });
 
-    return { Edit, Delete, Plus, students};
+    function handleDelete(id: string) {
+      StudentService.deleteStudents(id);
+
+      students.value = StudentService.getStudents();
+    }
+
+    return { Edit, Delete, Plus, students, handleDelete};
   },
 };
 </script>
-

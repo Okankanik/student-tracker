@@ -31,7 +31,7 @@ export const MOCK_CLASSES: ClassOption[] = [
 
 export const MOCK_STUDENTS: Student[] = [
   {
-    id: "1A992E60-D99A-4DE0-A0C9-ADF4F415D69F",
+    id: "1A992E60-D99A-4DE0-A0C9-ADF4F415D69A",
     firstName: "Ahmet",
     lastName: "Yılmaz",
     email: "ahmet.yilmaz@student.edu",
@@ -44,7 +44,7 @@ export const MOCK_STUDENTS: Student[] = [
     dateModified: new Date("2024-09-01"),
   },
   {
-    id: "1A992E60-D99A-4DE0-A0C9-ADF4F415D69F",
+    id: "1A992E60-D99A-4DE0-A0C9-ADF4F415D69B",
     firstName: "Ayşe",
     lastName: "Demir",
     email: "ayse.demir@student.edu",
@@ -56,7 +56,7 @@ export const MOCK_STUDENTS: Student[] = [
     dateCreated: new Date("2023-09-01"),
     dateModified: new Date("2024-01-15"),
   },  {
-    id: "1A992E60-D99A-4DE0-A0C9-ADF4F415D69F",
+    id: "1A992E60-D99A-4DE0-A0C9-ADF4F415D69C",
     firstName: "okan",
     lastName: "kanık",
     email: "okan.kanık@student.edu",
