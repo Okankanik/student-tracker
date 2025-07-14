@@ -1,0 +1,39 @@
+/* main.css veya global style dosyan */
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+.card-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding-top: 4rem;
+  background-color: white;
+}
+
+.form-card {
+  width: 100%;
+  max-width: 800px;
+  padding: 1rem;
+}
+
+.islemler {
+  display: flex;
+  gap: 5px;
+}
+
+@media (max-width: 600px) {
+  .islemler {
+    flex-direction: column;
+    align-items: stretch; 
+    width: 100%;
+  }
+  .islemler .el-button {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+  }
+}
+
