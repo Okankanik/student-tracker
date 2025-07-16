@@ -8,7 +8,7 @@
         >
           <span>ÖĞRENCİ LİSTESİ</span>
           <router-link to="/student-form" style="text-decoration: none">
-            <el-button type="primary" icon="Plus">Yeni Öğrenci Ekle</el-button>
+            <el-button type="primary" :icon="Plus">Öğrenci ekle</el-button>
           </router-link>
         </div>
       </template>
@@ -25,7 +25,7 @@
                 <el-button
                   :icon="Edit"
                   size="small"
-                  @click="handleEdit(scope.row)"
+                  @click="handledit(scope.row.id)"
                 ></el-button>
                 <el-button
                   :icon="Delete"
@@ -65,7 +65,11 @@ export default {
       students.value = StudentService.getStudents();
     }
 
-    return { Edit, Delete, Plus, students, handleDelete};
+    function handledit(id: string) {
+      console.log(id)
+    }
+
+    return { Edit, Delete, Plus, students, handleDelete, handledit};
   },
 };
 </script>

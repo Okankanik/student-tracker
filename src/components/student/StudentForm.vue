@@ -47,7 +47,9 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" style="width: 100%;">Kaydet</el-button>
+          <el-button @click="addNewStudent" type="primary" style="width: 100%"
+            >Kaydet</el-button
+          >
         </el-form-item>
       </el-form>
 
@@ -62,6 +64,7 @@
 import { ref } from "vue";
 import { MOCK_CLASSES } from "../../assets/mock-data/students";
 import { getRules } from "../../core/helpers/validation";
+import StudentService from "../../core/services/StudentService";
 
 export default {
   setup() {
@@ -78,7 +81,30 @@ export default {
 
     const { rules } = getRules();
 
-    return { form, rules, classes };
+    function addNewStudent() {
+      //seçilen sınıf idsinin ismini alma fonksiyonu
+      const selectedClass = classes.value.find(
+        (cls) => cls.id === form.value.classId
+      );
+      const className = selectedClass ? selectedClass.name : "";
+
+      const newStudent = {
+        id: crypto.randomUUID(),
+        firstName: form.value.firstName,
+        lastName: form.value.lastName,
+        email: form.value.email,
+        phoneNumber: form.value.phoneNumber,
+        classId: className,
+        gpa: 1,
+        enrollmentDate: new Date(form.value.enrollmentDate),
+        isActive: true,
+        dateCreated: new Date(form.value.enrollmentDate),
+        dateModified: new Date(),
+      };
+      StudentService.addStudent(newStudent);
+    }
+
+    return { form, rules, classes, addNewStudent };
   },
 };
 </script>

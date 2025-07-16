@@ -1,5 +1,5 @@
 import { MOCK_STUDENTS } from "../../assets/mock-data/students";
-const STORAGE_KEY = "students"; // LocalStorage'da kullanılacak anahtar ismi
+const STORAGE_KEY = "students"; 
 
 import type { Student } from "../../core/models/Student";
 
@@ -29,8 +29,19 @@ function deleteStudents(id: string) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredStudents));
 }
 
+function addStudent(newStudents: Student){
+  const students = getStudents();
+  students.push(newStudents);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+}
+
+function updateStudent(){
+
+}
 
 export default {
   getStudents,
   deleteStudents,
+  addStudent,
+  updateStudent
 };
