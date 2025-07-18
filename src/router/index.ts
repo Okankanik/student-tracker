@@ -10,11 +10,13 @@ const routes: RouteRecordRaw[] = [
     name: "StudentList",
     component: StudentList,
   },
-  {
-    path: "/student-form",
-    name: "StudentForm",
-    component: StudentForm,
-  },
+{
+  path: "/student-form/:id?",
+  name: "StudentForm",
+  component: StudentForm,
+  props: true,
+}
+
 ];
 
 const router = createRouter({

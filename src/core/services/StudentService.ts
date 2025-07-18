@@ -35,13 +35,26 @@ function addStudent(newStudents: Student){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
 }
 
-function updateStudent(){
+function updateStudent(studentToUpdate: Student) {
+  const students = getStudents();
 
+  const index = students.findIndex((s) => s.id === studentToUpdate.id);
+
+  if (index !== -1) {
+    students[index] = studentToUpdate;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+  }
+}
+
+function getStudentById(id: string) {
+  const students = getStudents();
+  return students.find(student => student.id === id) || null;
 }
 
 export default {
   getStudents,
   deleteStudents,
   addStudent,
-  updateStudent
+  updateStudent,
+  getStudentById
 };

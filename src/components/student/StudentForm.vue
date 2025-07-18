@@ -47,9 +47,9 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button @click="addNewStudent" type="primary" style="width: 100%"
-            >Kaydet</el-button
-          >
+          <el-button @click="onSubmit" type="primary" style="width: 100%">
+            Kaydet
+          </el-button>
         </el-form-item>
       </el-form>
 
@@ -60,15 +60,26 @@
   </div>
 </template>
 
-<script>
-import { ref } from "vue";
+<script lang="ts">
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import { MOCK_CLASSES } from "../../assets/mock-data/students";
-import { getRules } from "../../core/helpers/validation";
 import StudentService from "../../core/services/StudentService";
 
 export default {
   setup() {
+    function onSubmit() {
+      if (studentId) {
+        updateStudent();
+      } else {
+        addNewStudent();
+      }
+    }
+
     const classes = ref(MOCK_CLASSES);
+    const route = useRoute();
+    const studentId =
+      typeof route.params.id === "string" ? route.params.id : null;
 
     const form = ref({
       firstName: "",
@@ -79,10 +90,25 @@ export default {
       enrollmentDate: "",
     });
 
-    const { rules } = getRules();
+    onMounted(() => {
+      if (studentId) {
+        const student = StudentService.getStudentById(studentId);
+        if (student) {
+          form.value = {
+            firstName: student.firstName,
+            lastName: student.lastName,
+            email: student.email,
+            phoneNumber: student.phoneNumber,
+            classId: student.classId,
+            enrollmentDate: new Date(student.enrollmentDate)
+              .toISOString()
+              .substring(0, 10),
+          };
+        }
+      }
+    });
 
     function addNewStudent() {
-      //seçilen sınıf idsinin ismini alma fonksiyonu
       const selectedClass = classes.value.find(
         (cls) => cls.id === form.value.classId
       );
@@ -98,13 +124,37 @@ export default {
         gpa: 1,
         enrollmentDate: new Date(form.value.enrollmentDate),
         isActive: true,
-        dateCreated: new Date(form.value.enrollmentDate),
+        dateCreated: new Date(),
         dateModified: new Date(),
       };
       StudentService.addStudent(newStudent);
     }
 
-    return { form, rules, classes, addNewStudent };
+    function updateStudent() {
+      if (!studentId) return;
+
+      const updatedStudent = {
+        id: studentId,
+        firstName: form.value.firstName,
+        lastName: form.value.lastName,
+        email: form.value.email,
+        phoneNumber: form.value.phoneNumber,
+        classId: form.value.classId,
+        enrollmentDate: new Date(form.value.enrollmentDate),
+        isActive: true,
+        dateCreated: new Date(), 
+        dateModified: new Date(),
+        gpa: 1,
+      };
+      StudentService.updateStudent(updatedStudent);
+    }
+    return {
+      classes,
+      form,
+      onSubmit,
+      addNewStudent,
+      updateStudent,
+    };
   },
 };
 </script>

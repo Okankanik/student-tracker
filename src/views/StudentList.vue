@@ -16,7 +16,8 @@
       <h3>Kayıtlı Öğrenciler</h3>
       <div style="overflow-x: auto">
         <el-table :data="students">
-          <el-table-column prop="firstName" label="Ad Soyad" />
+          <el-table-column prop="firstName" label="Ad" />
+          <el-table-column prop="lastName" label="Soyad" />
           <el-table-column prop="classId" label="Sınıf" />
           <el-table-column prop="gpa" label="Not ortalaması" />
           <el-table-column label="İşlemler" width="100">
@@ -25,7 +26,7 @@
                 <el-button
                   :icon="Edit"
                   size="small"
-                  @click="handledit(scope.row.id)"
+                  @click="handleEdit(scope.row)"
                 ></el-button>
                 <el-button
                   :icon="Delete"
@@ -46,14 +47,19 @@
 </template>
 
 <script lang="ts">
-import { onMounted, ref } from "vue";
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { Edit, Delete, Plus } from "@element-plus/icons-vue";
 import StudentService from "../core/services/StudentService";
-import type { Student } from '../core/models/Student';
+import type { Student } from "../core/models/Student";
 
 export default {
   setup() {
+    const router = useRouter();
     const students = ref<Student[]>([]);
+    const isEditMode = ref(false);
+    const formDialogVisible = ref(false);
+    const formData = ref<Student | null>(null);
 
     onMounted(() => {
       students.value = StudentService.getStudents();
@@ -61,15 +67,29 @@ export default {
 
     function handleDelete(id: string) {
       StudentService.deleteStudents(id);
-
       students.value = StudentService.getStudents();
     }
 
-    function handledit(id: string) {
-      console.log(id)
+    function handleEdit(student: Student) {
+      formData.value = { ...student };
+      isEditMode.value = true;
+      formDialogVisible.value = true;
+
+      router.push({ name: "StudentForm", params: { id: student.id } });
     }
 
-    return { Edit, Delete, Plus, students, handleDelete, handledit};
+    return {
+      students,
+      isEditMode,
+      formDialogVisible,
+      formData,
+      handleDelete,
+      handleEdit,
+      Edit,
+      Delete,
+      Plus,
+    };
   },
 };
 </script>
+
