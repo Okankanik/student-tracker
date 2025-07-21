@@ -1,5 +1,7 @@
 /* main.css veya global style dosyan */
-html, body, #app {
+html,
+body,
+#app {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -24,10 +26,27 @@ html, body, #app {
   gap: 5px;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.filter-select {
+  width: 250px;
+}
+
+.header-title {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
 @media (max-width: 600px) {
   .islemler {
     flex-direction: column;
-    align-items: stretch; 
+    align-items: stretch;
     width: 100%;
   }
   .islemler .el-button {
@@ -36,4 +55,3 @@ html, body, #app {
     box-sizing: border-box;
   }
 }
-

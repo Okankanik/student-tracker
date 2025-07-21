@@ -19,29 +19,24 @@ function getStudents(): Student[] {
 }
 
 function deleteStudents(id: string) {
-  // LocalStorage'dan tüm öğrencileri al
   const students = getStudents();
-
-  // id parametresi ile eşleşmeyen öğrencileri filtrele (yani silmek istediğimiz id hariç tüm öğrencileri)
   const filteredStudents = students.filter((student) => student.id !== id);
-
-  // Güncellenmiş öğrenci listesini tekrar LocalStoragea JSON formatında kaydet
   localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredStudents));
 }
 
-function addStudent(newStudents: Student){
+function addStudent(newStudent: Student){
   const students = getStudents();
-  students.push(newStudents);
+  students.push(newStudent);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
 }
 
 function updateStudent(studentToUpdate: Student) {
   const students = getStudents();
-
   const index = students.findIndex((s) => s.id === studentToUpdate.id);
 
   if (index !== -1) {
     students[index] = studentToUpdate;
+    studentToUpdate.dateModified = new Date(); 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
   }
 }
@@ -51,10 +46,16 @@ function getStudentById(id: string) {
   return students.find(student => student.id === id) || null;
 }
 
+function countStudentsInClass(classId: string): number {
+  const students = getStudents();
+  return students.filter(student => student.classId === classId).length;
+}
+
 export default {
   getStudents,
   deleteStudents,
   addStudent,
   updateStudent,
-  getStudentById
+  getStudentById,
+  countStudentsInClass,   
 };

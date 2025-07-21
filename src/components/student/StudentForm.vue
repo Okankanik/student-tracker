@@ -3,7 +3,7 @@
     <el-card class="form-card">
       <template #header>
         <div class="card-header">
-          <span>Öğrenci Kayıt Formu</span>
+          <span>Öğrenci İşlemleri</span>
         </div>
       </template>
 
@@ -119,6 +119,21 @@ export default {
         (cls) => cls.id === form.value.classId
       );
 
+      if (!selectedClass) {
+        ElMessage.error("Lütfen geçerli bir sınıf seçin.");
+        return;
+      }
+
+      const currentCount = StudentService.countStudentsInClass(
+        selectedClass.id
+      );
+      // 4. Eğer mevcut öğrenci sayısı sınıfın maxStudents değerine eşit veya fazlaysa
+      // kullanıcıya kontenjan dolu mesajı göster ve eklemeyi durdur
+      if (currentCount >= selectedClass.maxStudents) {
+        ElMessage.error("Bu sınıfın kontenjanı dolmuştur.");
+        return;
+      }
+
       try {
         const newStudent = {
           id: crypto.randomUUID(),
@@ -141,31 +156,55 @@ export default {
       }
     }
 
-    function updateStudent() {
-      if (!studentId) return;
+function updateStudent() {
+  if (!studentId) return;
 
-      try {
-        const updatedStudent = {
-          id: studentId,
-          firstName: form.value.firstName,
-          lastName: form.value.lastName,
-          email: form.value.email,
-          phoneNumber: form.value.phoneNumber,
-          classId: form.value.classId,
-          enrollmentDate: new Date(form.value.enrollmentDate),
-          isActive: true,
-          dateCreated: new Date(),
-          dateModified: new Date(),
-          gpa: 1,
-        };
+  const selectedClass = classes.value.find(c => c.id === form.value.classId);
+  if (!selectedClass) {
+    ElMessage.error("Lütfen geçerli bir sınıf seçin.");
+    return;
+  }
 
-        StudentService.updateStudent(updatedStudent);
-        ElMessage.success("Öğrenci bilgileri başarıyla güncellendi.");
-        router.push("/");
-      } catch (error) {
-        ElMessage.error("Öğrenci güncellenirken bir hata oluştu.");
-      }
-    }
+  const currentCount = StudentService.countStudentsInClass(selectedClass.id);
+
+  const originalStudent = StudentService.getStudentById(studentId);
+  if (!originalStudent) {
+    ElMessage.error("Öğrenci bulunamadı.");
+    return;
+  }
+
+  // Eğer sınıf değişmişse ve yeni sınıf kontenjan doluysa engelle
+  // Eğer sınıf değişmemişse yani aynı sınıftaysa kontenjanı -1 olarak düşün kendi kaydı zaten sayıda
+  const adjustedCount = (form.value.classId === originalStudent.classId) ? currentCount - 1 : currentCount;
+
+  if (adjustedCount >= selectedClass.maxStudents) {
+    ElMessage.error("Bu sınıfın kontenjanı dolmuştur.");
+    return;
+  }
+
+  try {
+    const updatedStudent = {
+      id: studentId,
+      firstName: form.value.firstName,
+      lastName: form.value.lastName,
+      email: form.value.email,
+      phoneNumber: form.value.phoneNumber,
+      classId: form.value.classId,
+      enrollmentDate: new Date(form.value.enrollmentDate),
+      isActive: true,
+      dateCreated: originalStudent.dateCreated, // eski kayıt tarihini koru
+      dateModified: new Date(),
+      gpa: 1,
+    };
+
+    StudentService.updateStudent(updatedStudent);
+    ElMessage.success("Öğrenci bilgileri başarıyla güncellendi.");
+    router.push("/");
+  } catch (error) {
+    ElMessage.error("Öğrenci güncellenirken bir hata oluştu.");
+  }
+}
+
 
     return {
       classes,
@@ -175,6 +214,7 @@ export default {
       updateStudent,
       rules,
       ElMessage,
+      formRef,
     };
   },
 };

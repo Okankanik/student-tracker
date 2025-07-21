@@ -2,11 +2,24 @@
   <div class="card-container">
     <el-card class="form-card">
       <template #header>
-        <div
-          class="card-header"
-          style="display: flex; justify-content: space-between"
-        >
-          <span>ÖĞRENCİ LİSTESİ</span>
+        <div class="card-header">
+          <span class="header-title">ÖĞRENCİ LİSTESİ</span>
+
+          <el-select
+            v-model="selectedClassId"
+            placeholder="Sınıfa göre filtrele"
+            clearable
+            class="filter-select"
+          >
+            <el-option value="">Hepsi</el-option>
+            <el-option
+              v-for="cls in classes"
+              :key="cls.id"
+              :label="cls.name"
+              :value="cls.id"
+            />
+          </el-select>
+
           <router-link to="/student-form" style="text-decoration: none">
             <el-button type="primary" :icon="Plus">Öğrenci ekle</el-button>
           </router-link>
@@ -15,10 +28,11 @@
 
       <h3>Kayıtlı Öğrenciler</h3>
       <div style="overflow-x: auto">
-        <el-table :data="students">
+        <el-table :data="paginatedStudents">
           <el-table-column prop="firstName" label="Ad" />
           <el-table-column prop="lastName" label="Soyad" />
           <el-table-column label="Sınıf">
+            <!-- özel işlem için slot template açıyoruz -->
             <template #default="scope">
               {{ getClassName(scope.row.classId) }}
             </template>
@@ -44,19 +58,30 @@
         </el-table>
       </div>
       <template #footer>
-        <div></div>
+        <div class="footer">
+          <el-pagination
+            v-model:current-page="currentPage"
+            :page-size="pageSize"
+            :total="filteredStudents.length"
+            layout="prev, pager, next"
+            background
+            class="pagination"
+            style="margin-top: 20px; text-align: right"
+          />
+        </div>
       </template>
     </el-card>
   </div>
 </template>
 
 <script lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { Edit, Delete, Plus } from "@element-plus/icons-vue";
 import StudentService from "../core/services/StudentService";
 import type { Student } from "../core/models/Student";
 import { MOCK_CLASSES } from "../../src/assets/mock-data/students";
+import { ElMessageBox, ElMessage } from "element-plus";
 
 export default {
   setup() {
@@ -66,6 +91,28 @@ export default {
     const formDialogVisible = ref(false);
     const formData = ref<Student | null>(null);
     const classes = ref(MOCK_CLASSES);
+    const selectedClassId = ref("");
+    const currentPage = ref(1);
+    const pageSize = 8;
+
+    const paginatedStudents = computed(() => {
+      const start = (currentPage.value - 1) * pageSize;
+      const end = start + pageSize;
+      return filteredStudents.value.slice(start, end);
+    });
+
+    watch(selectedClassId, () => {
+      currentPage.value = 1;
+    });
+
+    const filteredStudents = computed(() => {
+      if (!selectedClassId.value) {
+        return students.value;
+      }
+      return students.value.filter(
+        (student) => student.classId === selectedClassId.value
+      );
+    });
 
     function getClassName(classId: string) {
       const cls = classes.value.find((c) => c.id === classId);
@@ -76,9 +123,31 @@ export default {
       students.value = StudentService.getStudents();
     });
 
-    function handleDelete(id: string) {
-      StudentService.deleteStudents(id);
-      students.value = StudentService.getStudents();
+    async function handleDelete(id: string) {
+      try {
+        await ElMessageBox.confirm(
+          "Bu Öğrenciyi silmek istediğinize emin misiniz ?",
+          "uyarı",
+          {
+            confirmButtonText: "evet",
+            cancelButtonText: "iptal",
+            type: "warning",
+          }
+        );
+
+        StudentService.deleteStudents(id);
+        students.value = StudentService.getStudents();
+
+        ElMessage({
+          type: "success",
+          message: "Öğrenci başarıyla silindi.",
+        });
+      } catch {
+        ElMessage({
+          type: "info",
+          message: "Silme işlemi iptal edildi.",
+        });
+      }
     }
 
     function handleEdit(student: Student) {
@@ -99,8 +168,13 @@ export default {
       Edit,
       Delete,
       Plus,
-      MOCK_CLASSES,
+      classes,
       getClassName,
+      selectedClassId,
+      filteredStudents,
+      paginatedStudents,
+      currentPage,
+      pageSize,
     };
   },
 };
