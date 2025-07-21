@@ -35,7 +35,7 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="Kayıt Tarihi" prop="form.enrollmentDate">
+        <el-form-item label="Kayıt Tarihi" prop="enrollmentDate">
           <el-date-picker
             v-model="form.enrollmentDate"
             type="date"
@@ -63,12 +63,20 @@
 <script lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { getRules } from "../../core/helpers/validation";
 import { MOCK_CLASSES } from "../../assets/mock-data/students";
 import StudentService from "../../core/services/StudentService";
+import { ElMessage } from "element-plus";
+import router from "../../router";
 
 export default {
   setup() {
-    function onSubmit() {
+    const classes = ref(MOCK_CLASSES);
+    const route = useRoute();
+    const { rules } = getRules();
+    const formRef = ref(null);
+
+    async function onSubmit() {
       if (studentId) {
         updateStudent();
       } else {
@@ -76,8 +84,6 @@ export default {
       }
     }
 
-    const classes = ref(MOCK_CLASSES);
-    const route = useRoute();
     const studentId =
       typeof route.params.id === "string" ? route.params.id : null;
 
@@ -112,48 +118,63 @@ export default {
       const selectedClass = classes.value.find(
         (cls) => cls.id === form.value.classId
       );
-      const className = selectedClass ? selectedClass.name : "";
 
-      const newStudent = {
-        id: crypto.randomUUID(),
-        firstName: form.value.firstName,
-        lastName: form.value.lastName,
-        email: form.value.email,
-        phoneNumber: form.value.phoneNumber,
-        classId: className,
-        gpa: 1,
-        enrollmentDate: new Date(form.value.enrollmentDate),
-        isActive: true,
-        dateCreated: new Date(),
-        dateModified: new Date(),
-      };
-      StudentService.addStudent(newStudent);
+      try {
+        const newStudent = {
+          id: crypto.randomUUID(),
+          firstName: form.value.firstName,
+          lastName: form.value.lastName,
+          email: form.value.email,
+          phoneNumber: form.value.phoneNumber,
+          classId: selectedClass ? selectedClass.id : "",
+          gpa: 1,
+          enrollmentDate: new Date(form.value.enrollmentDate),
+          isActive: true,
+          dateCreated: new Date(),
+          dateModified: new Date(),
+        };
+        StudentService.addStudent(newStudent);
+        ElMessage.success("Öğrenci başarıyla eklendi.");
+        router.push("/");
+      } catch (error) {
+        ElMessage.error("Öğrenci eklenirken bir hata oluştu !!!");
+      }
     }
 
     function updateStudent() {
       if (!studentId) return;
 
-      const updatedStudent = {
-        id: studentId,
-        firstName: form.value.firstName,
-        lastName: form.value.lastName,
-        email: form.value.email,
-        phoneNumber: form.value.phoneNumber,
-        classId: form.value.classId,
-        enrollmentDate: new Date(form.value.enrollmentDate),
-        isActive: true,
-        dateCreated: new Date(), 
-        dateModified: new Date(),
-        gpa: 1,
-      };
-      StudentService.updateStudent(updatedStudent);
+      try {
+        const updatedStudent = {
+          id: studentId,
+          firstName: form.value.firstName,
+          lastName: form.value.lastName,
+          email: form.value.email,
+          phoneNumber: form.value.phoneNumber,
+          classId: form.value.classId,
+          enrollmentDate: new Date(form.value.enrollmentDate),
+          isActive: true,
+          dateCreated: new Date(),
+          dateModified: new Date(),
+          gpa: 1,
+        };
+
+        StudentService.updateStudent(updatedStudent);
+        ElMessage.success("Öğrenci bilgileri başarıyla güncellendi.");
+        router.push("/");
+      } catch (error) {
+        ElMessage.error("Öğrenci güncellenirken bir hata oluştu.");
+      }
     }
+
     return {
       classes,
       form,
       onSubmit,
       addNewStudent,
       updateStudent,
+      rules,
+      ElMessage,
     };
   },
 };

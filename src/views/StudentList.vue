@@ -18,7 +18,11 @@
         <el-table :data="students">
           <el-table-column prop="firstName" label="Ad" />
           <el-table-column prop="lastName" label="Soyad" />
-          <el-table-column prop="classId" label="Sınıf" />
+          <el-table-column label="Sınıf">
+            <template #default="scope">
+              {{ getClassName(scope.row.classId) }}
+            </template>
+          </el-table-column>
           <el-table-column prop="gpa" label="Not ortalaması" />
           <el-table-column label="İşlemler" width="100">
             <template #default="scope">
@@ -52,6 +56,7 @@ import { useRouter } from "vue-router";
 import { Edit, Delete, Plus } from "@element-plus/icons-vue";
 import StudentService from "../core/services/StudentService";
 import type { Student } from "../core/models/Student";
+import { MOCK_CLASSES } from "../../src/assets/mock-data/students";
 
 export default {
   setup() {
@@ -60,6 +65,12 @@ export default {
     const isEditMode = ref(false);
     const formDialogVisible = ref(false);
     const formData = ref<Student | null>(null);
+    const classes = ref(MOCK_CLASSES);
+
+    function getClassName(classId: string) {
+      const cls = classes.value.find((c) => c.id === classId);
+      return cls ? cls.name : "bilinmiyor";
+    }
 
     onMounted(() => {
       students.value = StudentService.getStudents();
@@ -88,8 +99,9 @@ export default {
       Edit,
       Delete,
       Plus,
+      MOCK_CLASSES,
+      getClassName,
     };
   },
 };
 </script>
-
