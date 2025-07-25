@@ -1,8 +1,8 @@
 <template>
-  <div class="card-container">
-    <el-card class="form-card">
+  <div>
+    <el-card>
       <template #header>
-        <div class="card-header">
+        <div>
           <span>Öğrenci İşlemleri</span>
         </div>
       </template>
@@ -52,16 +52,12 @@
           </el-button>
         </el-form-item>
       </el-form>
-
-      <template #footer>
-        <div></div>
-      </template>
     </el-card>
   </div>
 </template>
 
 <script lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { getRules } from "../../core/helpers/validation";
 import { MOCK_CLASSES } from "../../assets/mock-data/students";
@@ -70,11 +66,16 @@ import { ElMessage } from "element-plus";
 import router from "../../router";
 
 export default {
-  setup() {
+  setup(props) {
     const classes = ref(MOCK_CLASSES);
     const route = useRoute();
     const { rules } = getRules();
     const formRef = ref(null);
+
+    defineProps({
+      formData: Object,
+      isEditMode: Boolean,
+    });
 
     async function onSubmit() {
       if (studentId) {
@@ -156,55 +157,61 @@ export default {
       }
     }
 
-function updateStudent() {
-  if (!studentId) return;
+    function updateStudent() {
+      if (!studentId) return;
 
-  const selectedClass = classes.value.find(c => c.id === form.value.classId);
-  if (!selectedClass) {
-    ElMessage.error("Lütfen geçerli bir sınıf seçin.");
-    return;
-  }
+      const selectedClass = classes.value.find(
+        (c) => c.id === form.value.classId
+      );
+      if (!selectedClass) {
+        ElMessage.error("Lütfen geçerli bir sınıf seçin.");
+        return;
+      }
 
-  const currentCount = StudentService.countStudentsInClass(selectedClass.id);
+      const currentCount = StudentService.countStudentsInClass(
+        selectedClass.id
+      );
 
-  const originalStudent = StudentService.getStudentById(studentId);
-  if (!originalStudent) {
-    ElMessage.error("Öğrenci bulunamadı.");
-    return;
-  }
+      const originalStudent = StudentService.getStudentById(studentId);
+      if (!originalStudent) {
+        ElMessage.error("Öğrenci bulunamadı.");
+        return;
+      }
 
-  // Eğer sınıf değişmişse ve yeni sınıf kontenjan doluysa engelle
-  // Eğer sınıf değişmemişse yani aynı sınıftaysa kontenjanı -1 olarak düşün kendi kaydı zaten sayıda
-  const adjustedCount = (form.value.classId === originalStudent.classId) ? currentCount - 1 : currentCount;
+      // Eğer sınıf değişmişse ve yeni sınıf kontenjan doluysa engelle
+      // Eğer sınıf değişmemişse yani aynı sınıftaysa kontenjanı -1 olarak düşün kendi kaydı zaten sayıda
+      const adjustedCount =
+        form.value.classId === originalStudent.classId
+          ? currentCount - 1
+          : currentCount;
 
-  if (adjustedCount >= selectedClass.maxStudents) {
-    ElMessage.error("Bu sınıfın kontenjanı dolmuştur.");
-    return;
-  }
+      if (adjustedCount >= selectedClass.maxStudents) {
+        ElMessage.error("Bu sınıfın kontenjanı dolmuştur.");
+        return;
+      }
 
-  try {
-    const updatedStudent = {
-      id: studentId,
-      firstName: form.value.firstName,
-      lastName: form.value.lastName,
-      email: form.value.email,
-      phoneNumber: form.value.phoneNumber,
-      classId: form.value.classId,
-      enrollmentDate: new Date(form.value.enrollmentDate),
-      isActive: true,
-      dateCreated: originalStudent.dateCreated, // eski kayıt tarihini koru
-      dateModified: new Date(),
-      gpa: 1,
-    };
+      try {
+        const updatedStudent = {
+          id: studentId,
+          firstName: form.value.firstName,
+          lastName: form.value.lastName,
+          email: form.value.email,
+          phoneNumber: form.value.phoneNumber,
+          classId: form.value.classId,
+          enrollmentDate: new Date(form.value.enrollmentDate),
+          isActive: true,
+          dateCreated: originalStudent.dateCreated, // eski kayıt tarihini koru
+          dateModified: new Date(),
+          gpa: 1,
+        };
 
-    StudentService.updateStudent(updatedStudent);
-    ElMessage.success("Öğrenci bilgileri başarıyla güncellendi.");
-    router.push("/");
-  } catch (error) {
-    ElMessage.error("Öğrenci güncellenirken bir hata oluştu.");
-  }
-}
-
+        StudentService.updateStudent(updatedStudent);
+        ElMessage.success("Öğrenci bilgileri başarıyla güncellendi.");
+        router.push("/");
+      } catch (error) {
+        ElMessage.error("Öğrenci güncellenirken bir hata oluştu.");
+      }
+    }
 
     return {
       classes,

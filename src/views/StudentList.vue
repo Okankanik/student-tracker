@@ -1,4 +1,18 @@
 <template>
+  <el-drawer
+    v-model="drawerVisible"
+    title="Yeni Öğrenci Ekle"
+    direction="rtl"
+    size="47%"
+    :with-header="true"
+    :before-close="closeDrawer"
+  >
+    <StudentForm
+      :formData="formData"
+      :isEditMode="isEditMode"
+      @form-closed="closeDrawer"
+    />
+  </el-drawer>
   <div class="card-container">
     <el-card class="form-card">
       <template #header>
@@ -19,10 +33,9 @@
               :value="cls.id"
             />
           </el-select>
-
-          <router-link to="/student-form" style="text-decoration: none">
-            <el-button type="primary" :icon="Plus">Öğrenci ekle</el-button>
-          </router-link>
+          <el-button type="primary" :icon="Plus" @click="openDrawer"
+            >Öğrenci ekle</el-button
+          >
         </div>
       </template>
 
@@ -82,8 +95,13 @@ import StudentService from "../core/services/StudentService";
 import type { Student } from "../core/models/Student";
 import { MOCK_CLASSES } from "../../src/assets/mock-data/students";
 import { ElMessageBox, ElMessage } from "element-plus";
+import StudentForm from "../components/student/StudentForm.vue";
 
 export default {
+    components: {
+    StudentForm,
+  },
+  
   setup() {
     const router = useRouter();
     const students = ref<Student[]>([]);
@@ -94,6 +112,15 @@ export default {
     const selectedClassId = ref("");
     const currentPage = ref(1);
     const pageSize = 8;
+    const drawerVisible = ref(false);
+
+    function openDrawer() {
+      drawerVisible.value = true;
+    }
+
+    function closeDrawer() {
+      drawerVisible.value = false;
+    }
 
     const paginatedStudents = computed(() => {
       const start = (currentPage.value - 1) * pageSize;
@@ -154,8 +181,7 @@ export default {
       formData.value = { ...student };
       isEditMode.value = true;
       formDialogVisible.value = true;
-
-      router.push({ name: "StudentForm", params: { id: student.id } });
+      drawerVisible.value = true;
     }
 
     return {
@@ -175,6 +201,10 @@ export default {
       paginatedStudents,
       currentPage,
       pageSize,
+      StudentForm,
+      openDrawer,
+      closeDrawer,
+      drawerVisible,
     };
   },
 };

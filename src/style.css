@@ -5,6 +5,7 @@ body,
   margin: 0;
   padding: 0;
   height: 100%;
+  font-family: sans-serif;
 }
 .card-container {
   display: flex;
@@ -19,6 +20,10 @@ body,
   width: 100%;
   max-width: 800px;
   padding: 1rem;
+}
+
+.form {
+  height: 100vh;
 }
 
 .islemler {
