@@ -57,37 +57,37 @@
 </template>
 
 <script lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { useRoute } from "vue-router";
 import { getRules } from "../../core/helpers/validation";
 import { MOCK_CLASSES } from "../../assets/mock-data/students";
 import StudentService from "../../core/services/StudentService";
-import { ElMessage } from "element-plus";
+import { ElMessage , ElNotification } from "element-plus";
 import router from "../../router";
+import type { Student } from "../../core/models/Student";
 
 export default {
+  props: {
+    formData: {
+      type: Object as () => Partial<Student> | null,
+      default: null,
+    },
+    isEditMode: Boolean,
+  },
   setup(props) {
     const classes = ref(MOCK_CLASSES);
     const route = useRoute();
     const { rules } = getRules();
     const formRef = ref(null);
-
-    defineProps({
-      formData: Object,
-      isEditMode: Boolean,
-    });
+    const studentId = computed(() => props.formData?.id || null);
 
     async function onSubmit() {
-      if (studentId) {
+      if (props.isEditMode) {
         updateStudent();
       } else {
         addNewStudent();
       }
     }
-
-    const studentId =
-      typeof route.params.id === "string" ? route.params.id : null;
-
     const form = ref({
       firstName: "",
       lastName: "",
@@ -97,23 +97,32 @@ export default {
       enrollmentDate: "",
     });
 
-    onMounted(() => {
-      if (studentId) {
-        const student = StudentService.getStudentById(studentId);
-        if (student) {
+    watch(
+      () => props.formData,
+      (newVal) => {
+        if (newVal) {
           form.value = {
-            firstName: student.firstName,
-            lastName: student.lastName,
-            email: student.email,
-            phoneNumber: student.phoneNumber,
-            classId: student.classId,
-            enrollmentDate: new Date(student.enrollmentDate)
-              .toISOString()
-              .substring(0, 10),
+            firstName: newVal.firstName || "",
+            lastName: newVal.lastName || "",
+            email: newVal.email || "",
+            phoneNumber: newVal.phoneNumber || "",
+            classId: newVal.classId || "",
+            enrollmentDate:
+              newVal.enrollmentDate?.toString().substring(0, 10) || "",
+          };
+        } else {
+          form.value = {
+            firstName: "",
+            lastName: "",
+            email: "",
+            phoneNumber: "",
+            classId: "",
+            enrollmentDate: "",
           };
         }
-      }
-    });
+      },
+      { immediate: true }
+    );
 
     function addNewStudent() {
       const selectedClass = classes.value.find(
@@ -121,7 +130,7 @@ export default {
       );
 
       if (!selectedClass) {
-        ElMessage.error("Lütfen geçerli bir sınıf seçin.");
+        ElNotification.error("Lütfen geçerli bir sınıf seçin.");
         return;
       }
 
@@ -131,7 +140,7 @@ export default {
       // 4. Eğer mevcut öğrenci sayısı sınıfın maxStudents değerine eşit veya fazlaysa
       // kullanıcıya kontenjan dolu mesajı göster ve eklemeyi durdur
       if (currentCount >= selectedClass.maxStudents) {
-        ElMessage.error("Bu sınıfın kontenjanı dolmuştur.");
+        ElNotification.error("Bu sınıfın kontenjanı dolmuştur.");
         return;
       }
 
@@ -150,10 +159,10 @@ export default {
           dateModified: new Date(),
         };
         StudentService.addStudent(newStudent);
-        ElMessage.success("Öğrenci başarıyla eklendi.");
+        ElNotification .success("Öğrenci başarıyla eklendi.");
         router.push("/");
       } catch (error) {
-        ElMessage.error("Öğrenci eklenirken bir hata oluştu !!!");
+        ElNotification .error("Öğrenci eklenirken bir hata oluştu !!!");
       }
     }
 
@@ -164,7 +173,7 @@ export default {
         (c) => c.id === form.value.classId
       );
       if (!selectedClass) {
-        ElMessage.error("Lütfen geçerli bir sınıf seçin.");
+        ElNotification.error("Lütfen geçerli bir sınıf seçin.");
         return;
       }
 
@@ -172,9 +181,14 @@ export default {
         selectedClass.id
       );
 
-      const originalStudent = StudentService.getStudentById(studentId);
+      if (!studentId.value) {
+        ElNotification.error("Geçerli bir öğrenci ID'si yok.");
+        return;
+      }
+
+      const originalStudent = StudentService.getStudentById(studentId.value);
       if (!originalStudent) {
-        ElMessage.error("Öğrenci bulunamadı.");
+        ElNotification.error("Öğrenci bulunamadı.");
         return;
       }
 
@@ -186,13 +200,13 @@ export default {
           : currentCount;
 
       if (adjustedCount >= selectedClass.maxStudents) {
-        ElMessage.error("Bu sınıfın kontenjanı dolmuştur.");
+        ElNotification.error("Bu sınıfın kontenjanı dolmuştur.");
         return;
       }
 
       try {
         const updatedStudent = {
-          id: studentId,
+          id: studentId.value,
           firstName: form.value.firstName,
           lastName: form.value.lastName,
           email: form.value.email,
@@ -206,10 +220,10 @@ export default {
         };
 
         StudentService.updateStudent(updatedStudent);
-        ElMessage.success("Öğrenci bilgileri başarıyla güncellendi.");
+        ElNotification.success("Öğrenci bilgileri başarıyla güncellendi.");
         router.push("/");
       } catch (error) {
-        ElMessage.error("Öğrenci güncellenirken bir hata oluştu.");
+        ElNotification.error("Öğrenci güncellenirken bir hata oluştu.");
       }
     }
 

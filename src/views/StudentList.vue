@@ -94,7 +94,7 @@ import { Edit, Delete, Plus } from "@element-plus/icons-vue";
 import StudentService from "../core/services/StudentService";
 import type { Student } from "../core/models/Student";
 import { MOCK_CLASSES } from "../../src/assets/mock-data/students";
-import { ElMessageBox, ElMessage } from "element-plus";
+import { ElMessageBox, ElMessage, ElNotification} from "element-plus";
 import StudentForm from "../components/student/StudentForm.vue";
 
 export default {
@@ -102,23 +102,25 @@ export default {
     StudentForm,
   },
   
-  setup() {
+ setup() {
     const router = useRouter();
     const students = ref<Student[]>([]);
     const isEditMode = ref(false);
-    const formDialogVisible = ref(false);
     const formData = ref<Student | null>(null);
     const classes = ref(MOCK_CLASSES);
     const selectedClassId = ref("");
     const currentPage = ref(1);
-    const pageSize = 8;
+    const pageSize = 10;
     const drawerVisible = ref(false);
 
     function openDrawer() {
+      console.log("Drawer açılıyor");
       drawerVisible.value = true;
     }
 
     function closeDrawer() {
+      console.log("drawer kapandı")
+      formData.value = null
       drawerVisible.value = false;
     }
 
@@ -165,12 +167,12 @@ export default {
         StudentService.deleteStudents(id);
         students.value = StudentService.getStudents();
 
-        ElMessage({
+        ElNotification ({
           type: "success",
           message: "Öğrenci başarıyla silindi.",
         });
       } catch {
-        ElMessage({
+        ElNotification ({
           type: "info",
           message: "Silme işlemi iptal edildi.",
         });
@@ -180,14 +182,12 @@ export default {
     function handleEdit(student: Student) {
       formData.value = { ...student };
       isEditMode.value = true;
-      formDialogVisible.value = true;
       drawerVisible.value = true;
     }
 
     return {
       students,
       isEditMode,
-      formDialogVisible,
       formData,
       handleDelete,
       handleEdit,
