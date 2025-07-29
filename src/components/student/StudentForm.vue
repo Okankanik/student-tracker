@@ -58,13 +58,14 @@
 
 <script lang="ts">
 import { ref, watch, computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 import { getRules } from "../../core/helpers/validation";
 import { MOCK_CLASSES } from "../../assets/mock-data/students";
 import StudentService from "../../core/services/StudentService";
-import { ElMessage , ElNotification } from "element-plus";
-import router from "../../router";
+import { ElMessage, ElNotification } from "element-plus";
+import type { FormInstance } from "element-plus";
 import type { Student } from "../../core/models/Student";
+import { getCurrentInstance } from "vue";
 
 export default {
   props: {
@@ -75,19 +76,29 @@ export default {
     isEditMode: Boolean,
   },
   setup(props) {
+    const internalInstance = getCurrentInstance();
+    const emit = internalInstance?.emit;
+
     const classes = ref(MOCK_CLASSES);
-    const route = useRoute();
+    const router = useRouter();
     const { rules } = getRules();
-    const formRef = ref(null);
     const studentId = computed(() => props.formData?.id || null);
+    const formRef = ref<FormInstance | null>(null);
 
     async function onSubmit() {
-      if (props.isEditMode) {
-        updateStudent();
-      } else {
-        addNewStudent();
+      if (!formRef.value) return;
+      try {
+        await formRef.value.validate();
+        if (props.isEditMode) {
+          updateStudent();
+        } else {
+          addNewStudent();
+        }
+      } catch (error) {
+        ElNotification.error("Lütfen formdaki tüm alanları doğru doldurun.");
       }
     }
+
     const form = ref({
       firstName: "",
       lastName: "",
@@ -152,22 +163,24 @@ export default {
           email: form.value.email,
           phoneNumber: form.value.phoneNumber,
           classId: selectedClass ? selectedClass.id : "",
-          gpa: 1,
+          gpa: selectedClass.grade,
           enrollmentDate: new Date(form.value.enrollmentDate),
           isActive: true,
           dateCreated: new Date(),
           dateModified: new Date(),
         };
+
         StudentService.addStudent(newStudent);
-        ElNotification .success("Öğrenci başarıyla eklendi.");
+        ElNotification.success("Öğrenci başarıyla eklendi.");
+        emit?.("form-closed");
         router.push("/");
       } catch (error) {
-        ElNotification .error("Öğrenci eklenirken bir hata oluştu !!!");
+        ElNotification.error("Öğrenci eklenirken bir hata oluştu !!!");
       }
     }
 
     function updateStudent() {
-      if (!studentId) return;
+      if (!studentId.value) return;
 
       const selectedClass = classes.value.find(
         (c) => c.id === form.value.classId
@@ -216,11 +229,12 @@ export default {
           isActive: true,
           dateCreated: originalStudent.dateCreated, // eski kayıt tarihini koru
           dateModified: new Date(),
-          gpa: 1,
+          gpa: selectedClass.grade,
         };
 
         StudentService.updateStudent(updatedStudent);
         ElNotification.success("Öğrenci bilgileri başarıyla güncellendi.");
+        emit?.("form-closed");
         router.push("/");
       } catch (error) {
         ElNotification.error("Öğrenci güncellenirken bir hata oluştu.");
@@ -236,6 +250,7 @@ export default {
       rules,
       ElMessage,
       formRef,
+      router,
     };
   },
 };

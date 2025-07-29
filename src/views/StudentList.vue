@@ -50,8 +50,8 @@
               {{ getClassName(scope.row.classId) }}
             </template>
           </el-table-column>
-          <el-table-column prop="gpa" label="Not ortalaması" />
-          <el-table-column label="İşlemler" width="100">
+          <el-table-column prop="gpa" label="sınıf ortalaması" />
+          <el-table-column label="İşlemler">
             <template #default="scope">
               <div class="islemler">
                 <el-button
@@ -89,21 +89,19 @@
 
 <script lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
-import { useRouter } from "vue-router";
 import { Edit, Delete, Plus } from "@element-plus/icons-vue";
 import StudentService from "../core/services/StudentService";
 import type { Student } from "../core/models/Student";
 import { MOCK_CLASSES } from "../../src/assets/mock-data/students";
-import { ElMessageBox, ElMessage, ElNotification} from "element-plus";
+import { ElMessageBox, ElNotification } from "element-plus";
 import StudentForm from "../components/student/StudentForm.vue";
 
 export default {
-    components: {
+  components: {
     StudentForm,
   },
-  
- setup() {
-    const router = useRouter();
+
+  setup() {
     const students = ref<Student[]>([]);
     const isEditMode = ref(false);
     const formData = ref<Student | null>(null);
@@ -114,13 +112,13 @@ export default {
     const drawerVisible = ref(false);
 
     function openDrawer() {
-      console.log("Drawer açılıyor");
       drawerVisible.value = true;
     }
 
     function closeDrawer() {
-      console.log("drawer kapandı")
-      formData.value = null
+      const updatedStudents = StudentService.getStudents();
+      students.value.splice(0, students.value.length, ...updatedStudents);
+      formData.value = null;
       drawerVisible.value = false;
     }
 
@@ -167,12 +165,12 @@ export default {
         StudentService.deleteStudents(id);
         students.value = StudentService.getStudents();
 
-        ElNotification ({
+        ElNotification({
           type: "success",
           message: "Öğrenci başarıyla silindi.",
         });
       } catch {
-        ElNotification ({
+        ElNotification({
           type: "info",
           message: "Silme işlemi iptal edildi.",
         });
