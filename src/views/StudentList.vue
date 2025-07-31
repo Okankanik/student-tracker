@@ -2,7 +2,7 @@
   <el-drawer
     v-model="drawerVisible"
     direction="rtl"
-    size="47%"
+    :size="isMobile ? '100%' : '47%'"
     :before-close="closeDrawer"
     :show-close="false"
     :with-header="false"
@@ -88,7 +88,7 @@
 </template>
 
 <script lang="ts">
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch, onBeforeUnmount } from "vue";
 import { Edit, Delete, Plus } from "@element-plus/icons-vue";
 import StudentService from "../core/services/StudentService";
 import type { Student } from "../core/models/Student";
@@ -110,6 +110,21 @@ export default {
     const currentPage = ref(1);
     const pageSize = 7;
     const drawerVisible = ref(false);
+    const isMobile = ref(window.innerWidth < 768);
+
+    //mobile kontrol
+    const updateIsMobile = () => {
+      isMobile.value = window.innerWidth < 768;
+    };
+
+    onMounted(() => {
+      window.addEventListener("resize", updateIsMobile);
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener("resize", updateIsMobile);
+    });
+    //mobile kontrol
 
     function openDrawer() {
       drawerVisible.value = true;
@@ -203,6 +218,7 @@ export default {
       openDrawer,
       closeDrawer,
       drawerVisible,
+      isMobile
     };
   },
 };
