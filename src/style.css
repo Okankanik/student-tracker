@@ -12,13 +12,14 @@ body,
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
-  padding-top: 4rem;
+  padding-top: 2,7rem;
   background-color: white;
 }
 
 .form-card {
+  top: 5px;
   width: 100%;
-  max-width: 800px;
+  max-width: 1150px;
   padding: 1rem;
 }
 

@@ -1,11 +1,11 @@
 <template>
   <el-drawer
     v-model="drawerVisible"
-    title="Yeni Öğrenci Ekle"
     direction="rtl"
     size="47%"
-    :with-header="true"
     :before-close="closeDrawer"
+    :show-close="false"
+    :with-header="false"
   >
     <StudentForm
       :formData="formData"
@@ -108,7 +108,7 @@ export default {
     const classes = ref(MOCK_CLASSES);
     const selectedClassId = ref("");
     const currentPage = ref(1);
-    const pageSize = 10;
+    const pageSize = 7;
     const drawerVisible = ref(false);
 
     function openDrawer() {

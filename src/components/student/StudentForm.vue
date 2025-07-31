@@ -9,7 +9,7 @@
 
       <el-form :model="form" :rules="rules" ref="formRef" label-position="top">
         <el-form-item label="Ad" prop="firstName">
-          <el-input v-model="form.firstName" placeholder="Ad Soyad" />
+          <el-input v-model="form.firstName" placeholder="Ad" />
         </el-form-item>
 
         <el-form-item label="Soyad" prop="lastName">
@@ -49,6 +49,12 @@
         <el-form-item>
           <el-button @click="onSubmit" type="primary" style="width: 100%">
             Kaydet
+          </el-button>
+        </el-form-item>
+
+        <el-form-item>
+          <el-button @click="offsubmit" type="secondary" style="width: 100%">
+            Geri
           </el-button>
         </el-form-item>
       </el-form>
@@ -97,6 +103,12 @@ export default {
       } catch (error) {
         ElNotification.error("Lütfen formdaki tüm alanları doğru doldurun.");
       }
+    }
+
+    function offsubmit() {
+      emit?.("form-closed");
+      router.push("/");
+      formRef.value?.resetFields();
     }
 
     const form = ref({
@@ -174,6 +186,7 @@ export default {
         ElNotification.success("Öğrenci başarıyla eklendi.");
         emit?.("form-closed");
         router.push("/");
+        formRef.value?.resetFields();
       } catch (error) {
         ElNotification.error("Öğrenci eklenirken bir hata oluştu !!!");
       }
@@ -251,6 +264,7 @@ export default {
       ElMessage,
       formRef,
       router,
+      offsubmit,
     };
   },
 };
