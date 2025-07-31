@@ -84,7 +84,6 @@ export default {
   setup(props) {
     const internalInstance = getCurrentInstance();
     const emit = internalInstance?.emit;
-
     const classes = ref(MOCK_CLASSES);
     const router = useRouter();
     const { rules } = getRules();
@@ -111,37 +110,30 @@ export default {
       formRef.value?.resetFields();
     }
 
-    const form = ref({
+    const defaultForm = {
       firstName: "",
       lastName: "",
       email: "",
       phoneNumber: "",
       classId: "",
       enrollmentDate: "",
-    });
+    };
+
+    const form = ref({ ...defaultForm });
 
     watch(
       () => props.formData,
       (newVal) => {
         if (newVal) {
           form.value = {
-            firstName: newVal.firstName || "",
-            lastName: newVal.lastName || "",
-            email: newVal.email || "",
-            phoneNumber: newVal.phoneNumber || "",
-            classId: newVal.classId || "",
-            enrollmentDate:
-              newVal.enrollmentDate?.toString().substring(0, 10) || "",
+            ...defaultForm,
+            ...newVal,
+            enrollmentDate: newVal.enrollmentDate
+              ? new Date(newVal.enrollmentDate).toISOString().substring(0, 10)
+              : "",
           };
         } else {
-          form.value = {
-            firstName: "",
-            lastName: "",
-            email: "",
-            phoneNumber: "",
-            classId: "",
-            enrollmentDate: "",
-          };
+          form.value = { ...defaultForm };
         }
       },
       { immediate: true }
@@ -168,14 +160,11 @@ export default {
       }
 
       try {
-        const newStudent = {
+        const newStudent: Student = {
+          ...form.value,
           id: crypto.randomUUID(),
-          firstName: form.value.firstName,
-          lastName: form.value.lastName,
-          email: form.value.email,
-          phoneNumber: form.value.phoneNumber,
-          classId: selectedClass ? selectedClass.id : "",
-          gpa: selectedClass.grade,
+          classId: selectedClass?.id || "",
+          gpa: selectedClass!.grade,
           enrollmentDate: new Date(form.value.enrollmentDate),
           isActive: true,
           dateCreated: new Date(),
@@ -231,18 +220,14 @@ export default {
       }
 
       try {
-        const updatedStudent = {
+        const updatedStudent: Student = {
+          ...form.value, 
           id: studentId.value,
-          firstName: form.value.firstName,
-          lastName: form.value.lastName,
-          email: form.value.email,
-          phoneNumber: form.value.phoneNumber,
-          classId: form.value.classId,
-          enrollmentDate: new Date(form.value.enrollmentDate),
-          isActive: true,
-          dateCreated: originalStudent.dateCreated, // eski kayıt tarihini koru
-          dateModified: new Date(),
           gpa: selectedClass.grade,
+          isActive: true,
+          enrollmentDate: new Date(form.value.enrollmentDate), 
+          dateCreated: originalStudent.dateCreated,
+          dateModified: new Date(),
         };
 
         StudentService.updateStudent(updatedStudent);
