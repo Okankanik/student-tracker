@@ -1,45 +1,49 @@
 <template>
-  <el-drawer
-    v-model="drawerVisible"
-    direction="rtl"
-    :size="isMobile ? '100%' : '47%'"
-    :before-close="closeDrawer"
-    :show-close="false"
-    :with-header="false"
-  >
-    <StudentForm
-      :formData="formData"
-      :isEditMode="isEditMode"
-      @form-closed="closeDrawer"
-    />
-  </el-drawer>
+  <StudentForm
+    :drawerVisible="drawerVisible"
+    :formData="formData"
+    :isEditMode="isEditMode"
+    :isMobile="isMobile"
+    @form-closed="closeDrawer"
+  />
+
   <div class="card-container">
     <el-card class="form-card">
       <template #header>
         <div class="card-header">
           <span class="header-title">ÖĞRENCİ LİSTESİ</span>
 
-          <el-select
-            v-model="selectedClassId"
-            placeholder="Sınıfa göre filtrele"
-            clearable
-            class="filter-select"
-          >
-            <el-option value="">Hepsi</el-option>
-            <el-option
-              v-for="cls in classes"
-              :key="cls.id"
-              :label="cls.name"
-              :value="cls.id"
-            />
-          </el-select>
           <el-button type="primary" :icon="Plus" @click="openDrawer"
             >Öğrenci ekle</el-button
           >
         </div>
       </template>
+      <span
+        class="filter-container"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          justify-content: space-between;
+        "
+      >
+        <h3>Kayıtlı Öğrenciler</h3>
+        <el-select
+          v-model="selectedClassId"
+          placeholder="Sınıfa göre filtrele"
+          clearable
+          class="filter-select"
+        >
+          <el-option value="">Hepsi</el-option>
+          <el-option
+            v-for="cls in classes"
+            :key="cls.id"
+            :label="cls.name"
+            :value="cls.id"
+          />
+        </el-select>
+      </span>
 
-      <h3>Kayıtlı Öğrenciler</h3>
       <div style="overflow-x: auto">
         <el-table :data="paginatedStudents">
           <el-table-column prop="firstName" label="Ad" />
@@ -214,11 +218,10 @@ export default {
       paginatedStudents,
       currentPage,
       pageSize,
-      StudentForm,
       openDrawer,
       closeDrawer,
       drawerVisible,
-      isMobile
+      isMobile,
     };
   },
 };

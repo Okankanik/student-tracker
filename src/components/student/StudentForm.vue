@@ -1,65 +1,55 @@
 <template>
-  <div>
-    <el-card>
-      <template #header>
-        <div>
-          <span>Öğrenci İşlemleri</span>
-        </div>
-      </template>
+  <el-drawer
+    v-model="showDrawer"
+    direction="rtl"
+    :size="isMobile ? '100%' : '47%'"
+    :before-close="offsubmit"
+    :title="isEditMode ? 'Öğrenci Düzenle' : 'Öğrenci Ekle'"
+  >
+    <el-form :model="form" :rules="rules" ref="formRef" label-position="top">
+      <el-form-item label="Ad" prop="firstName">
+        <el-input v-model="form.firstName" placeholder="Ad" />
+      </el-form-item>
 
-      <el-form :model="form" :rules="rules" ref="formRef" label-position="top">
-        <el-form-item label="Ad" prop="firstName">
-          <el-input v-model="form.firstName" placeholder="Ad" />
-        </el-form-item>
+      <el-form-item label="Soyad" prop="lastName">
+        <el-input v-model="form.lastName" placeholder="Soyad" />
+      </el-form-item>
 
-        <el-form-item label="Soyad" prop="lastName">
-          <el-input v-model="form.lastName" placeholder="Soyad" />
-        </el-form-item>
+      <el-form-item label="E-mail" prop="email">
+        <el-input v-model="form.email" placeholder="E-mail" />
+      </el-form-item>
 
-        <el-form-item label="E-mail" prop="email">
-          <el-input v-model="form.email" placeholder="E-mail" />
-        </el-form-item>
+      <el-form-item label="Telefon" prop="phoneNumber">
+        <el-input v-model="form.phoneNumber" placeholder="Telefon" />
+      </el-form-item>
 
-        <el-form-item label="Telefon" prop="phoneNumber">
-          <el-input v-model="form.phoneNumber" placeholder="Telefon" />
-        </el-form-item>
-
-        <el-form-item label="Sınıf" prop="classId">
-          <el-select v-model="form.classId" placeholder="Sınıf Seçiniz">
-            <el-option
-              v-for="cls in classes"
-              :key="cls.id"
-              :label="cls.name"
-              :value="cls.id"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="Kayıt Tarihi" prop="enrollmentDate">
-          <el-date-picker
-            v-model="form.enrollmentDate"
-            type="date"
-            placeholder="Pick a date"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
+      <el-form-item label="Sınıf" prop="classId">
+        <el-select v-model="form.classId" placeholder="Sınıf Seçiniz">
+          <el-option
+            v-for="cls in classes"
+            :key="cls.id"
+            :label="cls.name"
+            :value="cls.id"
           />
-        </el-form-item>
+        </el-select>
+      </el-form-item>
 
-        <el-form-item>
-          <el-button @click="onSubmit" type="primary" style="width: 100%">
-            Kaydet
-          </el-button>
-        </el-form-item>
-
-        <el-form-item>
-          <el-button @click="offsubmit" type="secondary" style="width: 100%">
-            Geri
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
-  </div>
+      <el-form-item label="Kayıt Tarihi" prop="enrollmentDate">
+        <el-date-picker
+          v-model="form.enrollmentDate"
+          type="date"
+          placeholder="Tarih Seçiniz"
+          format="DD.MM.YYYY"
+          value-format="YYYY-MM-DD"
+          style="width: 100%"
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="offsubmit" type="secondary"> İptal </el-button>
+      <el-button @click="onSubmit" type="primary"> Kaydet </el-button>
+    </template>
+  </el-drawer>
 </template>
 
 <script lang="ts">
@@ -71,7 +61,6 @@ import StudentService from "../../core/services/StudentService";
 import { ElMessage, ElNotification } from "element-plus";
 import type { FormInstance } from "element-plus";
 import type { Student } from "../../core/models/Student";
-import { getCurrentInstance } from "vue";
 
 export default {
   props: {
@@ -80,35 +69,34 @@ export default {
       default: null,
     },
     isEditMode: Boolean,
+    drawerVisible: Boolean,
+    isMobile: Boolean,
   },
-  setup(props) {
-    const internalInstance = getCurrentInstance();
-    const emit = internalInstance?.emit;
+  emits: ["form-closed"],
+  setup(props, { emit }) {
     const classes = ref(MOCK_CLASSES);
     const router = useRouter();
     const { rules } = getRules();
     const studentId = computed(() => props.formData?.id || null);
+    const showDrawer = computed(() => props.drawerVisible);
     const formRef = ref<FormInstance | null>(null);
 
     async function onSubmit() {
       if (!formRef.value) return;
-      try {
-        await formRef.value.validate();
-        if (props.isEditMode) {
-          updateStudent();
-        } else {
-          addNewStudent();
-        }
-      } catch (error) {
-        ElNotification.error("Lütfen formdaki tüm alanları doğru doldurun.");
+
+      await formRef.value.validate();
+      if (props.isEditMode) {
+        updateStudent();
+      } else {
+        addNewStudent();
       }
     }
 
-    function offsubmit() {
-      emit?.("form-closed");
+    const offsubmit = () => {
+      emit("form-closed");
       router.push("/");
       formRef.value?.resetFields();
-    }
+    };
 
     const defaultForm = {
       firstName: "",
@@ -173,10 +161,10 @@ export default {
 
         StudentService.addStudent(newStudent);
         ElNotification.success("Öğrenci başarıyla eklendi.");
-        emit?.("form-closed");
+        emit("form-closed");
         router.push("/");
         formRef.value?.resetFields();
-      } catch (error) {
+      } catch {
         ElNotification.error("Öğrenci eklenirken bir hata oluştu !!!");
       }
     }
@@ -221,20 +209,20 @@ export default {
 
       try {
         const updatedStudent: Student = {
-          ...form.value, 
+          ...form.value,
           id: studentId.value,
           gpa: selectedClass.grade,
           isActive: true,
-          enrollmentDate: new Date(form.value.enrollmentDate), 
+          enrollmentDate: new Date(form.value.enrollmentDate),
           dateCreated: originalStudent.dateCreated,
           dateModified: new Date(),
         };
 
         StudentService.updateStudent(updatedStudent);
         ElNotification.success("Öğrenci bilgileri başarıyla güncellendi.");
-        emit?.("form-closed");
+        emit("form-closed");
         router.push("/");
-      } catch (error) {
+      } catch {
         ElNotification.error("Öğrenci güncellenirken bir hata oluştu.");
       }
     }
@@ -250,6 +238,7 @@ export default {
       formRef,
       router,
       offsubmit,
+      showDrawer,
     };
   },
 };
